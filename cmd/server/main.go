@@ -3,7 +3,9 @@ package main
 import (
 	// (一部抜粋)
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	hellopb "mygrpc/pkg/grpc"
 	"net"
@@ -74,4 +76,39 @@ func (s *myServer) HelloServerStream(req *hellopb.HelloRequest, stream hellopb.G
 		time.Sleep(time.Second * 1)
 	}
 	return nil
+}
+
+func (s *myServer) HelloClientStream(stream hellopb.GreetingService_HelloClientStreamServer) error {
+	nameList := make([]string, 0)
+	for {
+		req, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			message := fmt.Sprintf("Hello, %v!", nameList)
+			return stream.SendAndClose(&hellopb.HelloResponse{
+				Message: message,
+			})
+		}
+		if err != nil {
+			return err
+		}
+		nameList = append(nameList, req.GetName())
+	}
+}
+
+func (s *myServer) HelloBiStreams(stream hellopb.GreetingService_HelloBiStreamsServer) error {
+	for {
+		req, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		message := fmt.Sprintf("Hello, %v!", req.GetName())
+		if err := stream.Send(&hellopb.HelloResponse{
+			Message: message,
+		}); err != nil {
+			return err
+		}
+	}
 }
