@@ -13,6 +13,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -83,7 +84,11 @@ func Hello() {
 	req := &hellopb.HelloRequest{
 		Name: name,
 	}
-	res, err := client.Hello(context.Background(), req)
+	ctx := context.Background()
+	md := metadata.New(map[string]string{"type": "unary", "from": "client"})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	res, err := client.Hello(ctx, req)
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -149,7 +154,11 @@ func HelloClientStream() {
 }
 
 func HelloBiStreams() {
-	stream, err := client.HelloBiStreams(context.Background())
+	ctx := context.Background()
+	md := metadata.New(map[string]string{"type": "stream", "from": "client"})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	stream, err := client.HelloBiStreams(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return
