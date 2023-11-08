@@ -1,7 +1,7 @@
 package main
 
 import (
-	// (一部抜粋)
+	// (一部抜粋)wfewefwe
 	"bufio"
 	"context"
 	"errors"
